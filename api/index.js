@@ -1,18 +1,22 @@
+// api/index.js
 import express from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import cookieParser from 'cookie-parser';
 import userRoutes from './routes/user.routes.js';
 import authRoutes from './routes/auth.routes.js';
-import errorHandler from './utils/error.js';
+import postRoutes from './routes/post.routes.js';
+import { errorHandler } from './utils/error.js';
+
+dotenv.config();
 
 const app = express();
 
 app.use(express.json());
-
-dotenv.config();
+app.use(cookieParser());
 
 mongoose
-  .connect(process.env.MONGO_URL, { useNewUrlParser: true, useUnifiedTopology: true })
+  .connect(process.env.MONGO_URL)
   .then(() => {
     console.log('MongoDB is connected');
   })
@@ -20,13 +24,15 @@ mongoose
     console.log(err);
   });
 
-//Routes
+// Routes
 app.use('/api/user', userRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/post', postRoutes);
 
-//middleware
+// Middleware
 app.use(errorHandler);
 
-app.listen(3000, () => {
-  console.log('Server is running on port 3000');
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });

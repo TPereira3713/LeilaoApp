@@ -1,13 +1,26 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { signoutSuccess } from '../redux/user/userSlice';
-import defaultAvatar from '../assets/default-avatar.svg'; 
+import { jwtDecode } from 'jwt-decode';
+import defaultAvatar from '../assets/default-avatar.svg';
 
 const Navbar = () => {
   const { currentUser } = useSelector((state) => state.user);
   const [dropdownVisible, setDropdownVisible] = useState(false);
+  const [email, setEmail] = useState('');
   const dispatch = useDispatch();
   const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    if (currentUser?.token) {
+      try {
+        const decodedToken = jwtDecode(currentUser.token);
+        setEmail(decodedToken.email);
+      } catch (error) {
+        console.error('Failed to decode token', error);
+      }
+    }
+  }, [currentUser]);
 
   const handleAvatarClick = () => {
     setDropdownVisible(!dropdownVisible);
@@ -15,9 +28,7 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     try {
-      const res = await fetch('/api/user/signout', {
-        method: 'POST',
-      });
+      const res = await fetch('/api/user/signout', { method: 'POST' });
       const data = await res.json();
       if (!res.ok) {
         console.log(data.message);
@@ -74,6 +85,12 @@ const Navbar = () => {
               </>
             ) : (
               <div className="relative flex items-center">
+                <a
+                  href="/post"
+                  className="text-gray-900 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 font-medium rounded-lg text-sm px-4 py-2 mr-2"
+                >
+                  Post
+                </a>
                 <img
                   src={currentUser.avatar || defaultAvatar}
                   alt="User Avatar"
@@ -86,7 +103,7 @@ const Navbar = () => {
                     className="absolute right-0 mt-10 w-48 bg-white border border-gray-200 rounded shadow-lg z-10"
                   >
                     <div className="py-2 px-4">
-                      <p className="text-lg text-gray-700">{currentUser.rest.email}</p>
+                      <p className="text-lg text-gray-700">{email}</p>
                       <a
                         href="/profile"
                         className="block mt-2 text-blue-500 hover:text-blue-700"
